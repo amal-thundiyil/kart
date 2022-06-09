@@ -138,6 +138,16 @@ vendor-install:
 	-$(RM) $(vendor-install)
 	$(MAKE) $(vendor-install)
 
+#  Tab completion scripts
+
+completer-script = $(VIRTUAL_ENV)/bin/completer
+
+.PHONY: completer
+completer:
+	_KART_COMPLETE=bash_source $(kart-app-any) > $(completer-script).bash
+	_KART_COMPLETE=zsh_source $(kart-app-any) > $(completer-script).zsh
+	_KART_COMPLETE=fish_source $(kart-app-any) > $(completer-script).fish
+
 # Install Python (just release) dependencies
 .PHONY: py-deps
 py-deps: $(vendor-install) $(py-install-main) | $(VIRTUAL_ENV)
@@ -155,9 +165,11 @@ $(kart-app-release): py-deps setup.py kart | $(VIRTUAL_ENV)
 	-$(RM) dist/*
 	python3 setup.py sdist
 	pip install --force-reinstall --no-deps dist/*.tar.gz
+	$(MAKE) completer
 
 $(kart-app-dev): py-deps-dev setup.py | $(VIRTUAL_ENV)
 	pip install --force-reinstall --no-deps -e .
+	$(MAKE) completer
 
 $(kart-app-any):
 	$(MAKE) $(kart-app-release)
