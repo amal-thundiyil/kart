@@ -9,14 +9,18 @@ import re
 import subprocess
 import sys
 import traceback
+from os.path import expanduser
 
 import click
 import pygit2
+
+from kart.completion import Shells, install_callback
 
 from . import core  # noqa
 from .cli_util import add_help_subcommand, call_and_exit_flag, tool_environment
 from .context import Context
 from .exec import execvp
+from kart import prefix
 
 MODULE_COMMANDS = {
     "annotations.cli": {"build-annotations"},
@@ -179,6 +183,13 @@ class KartGroup(click.Group):
     help="Show version information and exit.",
 )
 @click.option("-v", "--verbose", count=True, help="Repeat for more verbosity")
+@click.option(
+    "--install-completion",
+    type=click.Choice([s.value for s in Shells] + ["auto"]),
+    callback=install_callback,
+    expose_value=False,
+    help="Install completion for the specific or current shell",
+)
 # NOTE: this option isn't used in `cli`, but it is used in `PdbGroup` above.
 @click.option(
     "--post-mortem",
@@ -370,6 +381,30 @@ def ext_run(ctx, script, args):
         raise click.ClickException(f"{script} requires a main(ctx, args) function")
 
     return module.main(ctx=ctx, args=args)
+
+
+@cli.command()
+@click.option(
+    "--file",
+    "file",
+    type=click.Path(file_okay=True, dir_okay=False),
+    help="File for shell configuration",
+)
+@click.argument("shell", type=click.Choice(["zsh", "bash", "fish"]))
+def completer(file, shell):
+    """Get autocompletion script for kart"""
+    script = f"{prefix}/bin/completer.{shell}"
+    shell_conf = {
+        "zsh": f"{expanduser('~')}/.zshrc",
+        "bash": f"{expanduser('~')}/.bashrc",
+        "fish": f"{expanduser('~')}/.config/fish/config.fish",
+    }
+    shell_conf[shell] = file if file else shell_conf[shell]
+
+    with open(shell_conf[shell], "a") as f:
+        _ = f.write(f"\n# kart autocompletion\nsource {script}\n")
+
+    click.echo(f"Successfully added autocompletion for {shell}.")
 
 
 def _hackily_parse_command(args, skip_first_arg=True):
