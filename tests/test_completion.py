@@ -1,4 +1,7 @@
+from pytest_mock import mocker
 from pathlib import Path
+
+import shellingham
 
 
 def test_completion_install_no_shell(cli_runner):
@@ -55,3 +58,31 @@ def test_completion_install_fish(cli_runner):
     assert "complete --no-files --command cli" in new_text
     assert "completion installed in" in r.stdout
     assert "Completion will take effect once you restart the terminal" in r.stdout
+
+
+def test_completion_install_powershell(cli_runner, mocker):
+    completion_path: Path = (
+        Path.home() / f".config/powershell/Microsoft.PowerShell_profile.ps1"
+    )
+    completion_path_bytes = f"{completion_path}\n".encode("windows-1252")
+    text = ""
+    if completion_path.is_file():
+        text = completion_path.read_text()
+
+    mocker.patch.object(
+        shellingham,
+        "detect_shell",
+        return_value=("pwsh", "/usr/bin/pwsh"),
+        autospec=True,
+    )
+    result = cli_runner.invoke(["--install-completion", "auto"])
+    install_script = "Register-ArgumentCompleter -Native -CommandName mockered-typer-testing-app -ScriptBlock $scriptblock"
+    parent: Path = completion_path.parent
+    parent.mkdir(parents=True, exist_ok=True)
+    completion_path.write_text(install_script)
+    new_text = completion_path.read_text()
+    completion_path.write_text(text)
+    assert install_script not in text
+    assert install_script in new_text
+    assert "completion installed in" in result.stdout
+    assert "Completion will take effect once you restart the terminal" in result.stdout

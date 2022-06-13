@@ -6,6 +6,7 @@ _When adding new entries to the changelog, please include issue/PR numbers where
 
 ## 0.11.4 (UNRELEASED)
 
+- Extend shell completion with Powershell support. [#643](https://github.com/koordinates/kart/issues/643)
 - Add `--install-completion` option for installing shell completion. [#643](https://github.com/koordinates/kart/issues/643)
 - Changed format of feature IDs in GeoJSON output to be more informative and consistent. [#135](https://github.com/koordinates/kart/issues/135)
 - Fixed primary key issues for shapefile import - now generates an `auto_pk` by default, but uses an existing field if specified (doesn't use the FID). [#646](https://github.com/koordinates/kart/pull/646)
