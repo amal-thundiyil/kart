@@ -3,7 +3,7 @@ import re
 import sys
 from enum import Enum
 from pathlib import Path
-from typing import Optional, Tuple, Any, Optional
+from typing import Optional, Tuple, Optional, Any,Dict, List
 
 import click
 from click.shell_completion import _SOURCE_BASH, _SOURCE_ZSH, _SOURCE_FISH
@@ -151,3 +151,26 @@ def install_callback(ctx: click.Context, param: click.Parameter, value: Any) -> 
     click.secho(f"{shell} completion installed in {path}", fg="green")
     click.echo("Completion will take effect once you restart the terminal")
     sys.exit(0)
+
+
+@click.shell_completion.add_completion_class
+class PowerShellComplete(click.shell_completion.ShellComplete):
+    name = Shells.powershell.value
+    source_template = COMPLETION_SCRIPT_POWER_SHELL
+
+    def source_vars(self) -> Dict[str, Any]:
+        return {
+            "complete_func": self.func_name,
+            "complete_var": self.complete_var,
+            "prog_name": self.prog_name,
+        }
+
+    def get_completion_args(self) -> Tuple[List[str], str]:
+        completion_args = os.getenv("_KART_COMPLETE_ARGS", "")
+        incomplete = os.getenv("_KART_COMPLETE_WORD_TO_COMPLETE", "")
+        cwords = click.parser.split_arg_string(completion_args)
+        args = cwords[1:]
+        return args, incomplete
+
+    def format_completion(self, item: click.shell_completion.CompletionItem) -> str:
+        return f"{item.value} -- {item.help or ' '}"
