@@ -5,6 +5,7 @@ import subprocess
 from pytest_mock import mocker
 from pathlib import Path
 import shellingham
+import pytest
 
 from kart.cli_util import OutputFormatType
 from kart.completion_shared import conflict_completer, ref_completer, path_completer
@@ -18,8 +19,12 @@ def test_completion_install_no_shell(cli_runner):
     assert "Error: Option '--install-tab-completion' requires an argument" in r.stderr
 
 
-def test_completion_install_bash(cli_runner):
+@pytest.mark.parametrize("bash_profile_exists", [True, False])
+def test_completion_install_bash(cli_runner, bash_profile_exists):
     bash_completion_path: Path = Path.home() / ".bashrc"
+    if bash_profile_exists:
+        bash_profile_path: Path = Path.home() / ".bash_profile"
+        bash_profile_path.write_text("")
     text = ""
     if bash_completion_path.is_file():
         text = bash_completion_path.read_text()
@@ -36,6 +41,8 @@ def test_completion_install_bash(cli_runner):
     install_content = install_source_path.read_text()
     install_source_path.unlink()
     assert "complete -o nosort -F _cli_completion cli" in install_content
+    if bash_profile_exists:
+        assert f"source {bash_completion_path}" in bash_profile_path.read_text()
 
 
 def test_completion_install_zsh(cli_runner):

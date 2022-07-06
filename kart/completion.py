@@ -93,6 +93,20 @@ def install_helper(
     return completion_path
 
 
+def add_bashrc_path_to_bash_profile(profile_path, rc_path):
+    """Source .bashrc into .bash_profile"""
+    profile_content = ""
+    if profile_path.is_file():
+        profile_content = profile_path.read_text()
+    if (
+        f"source{rc_path}" not in profile_content
+        and f"source ~/.bashrc" not in profile_content
+    ):
+        profile_content += f"\nsource {rc_path}"
+    profile_content += "\n"
+    profile_path.write_text(profile_content)
+
+
 def install_bash(*, prog_name: str, complete_var: str, shell: str) -> Path:
     # Ref: https://github.com/scop/bash-completion#faq
     # It seems bash-completion is the official completion system for bash:
@@ -101,6 +115,10 @@ def install_bash(*, prog_name: str, complete_var: str, shell: str) -> Path:
     completion_path = Path.home() / f".bash_completions/{prog_name}.sh"
     bashrc_path = Path.home() / ".bashrc"
     completion_init_lines = [f"source {completion_path}"]
+    # For MacOS systems which have .bash_profile by default
+    bash_profile = Path.home() / ".bash_profile"
+    if bash_profile.exists():
+        add_bashrc_path_to_bash_profile(bash_profile, bashrc_path)
     return install_helper(
         prog_name,
         complete_var,
