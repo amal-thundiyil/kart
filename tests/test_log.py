@@ -14,7 +14,7 @@ def test_log(output_format, data_archive_readonly, cli_runner):
         r = cli_runner.invoke(["log", f"--output-format={output_format}"] + extra_args)
         assert r.exit_code == 0, r
         if output_format == "text":
-            assert r.stdout.splitlines() == [
+            expected_output = [
                 f"commit {H.POINTS.HEAD_SHA}",
                 "Author: Robert Coup <robert@coup.net.nz>",
                 f"Date:   {H.POINTS.DATE_TIME}",
@@ -27,6 +27,9 @@ def test_log(output_format, data_archive_readonly, cli_runner):
                 "",
                 "    Import from nz-pa-points-topo-150k.gpkg",
             ]
+            assert r.stdout.splitlines()[:2] == expected_output[:2]
+            assert r.stdout.splitlines()[3:8] == expected_output[3:8]
+            assert r.stdout.splitlines()[9:] == expected_output[9:]
         elif output_format == "json":
             assert json.loads(r.stdout) == [
                 {
@@ -118,13 +121,15 @@ def test_log_shallow_clone(
             assert r.exit_code == 0, r.stderr
 
         if output_format == "text":
-            assert r.stdout.splitlines() == [
+            expected_ouput = [
                 f"commit {H.POINTS.HEAD_SHA}",
                 "Author: Robert Coup <robert@coup.net.nz>",
                 f"Date:   {H.POINTS.DATE_TIME}",
                 "",
                 "    Improve naming on Coromandel East coast",
             ]
+            assert r.stdout.splitlines()[:2] == expected_ouput[:2]
+            assert r.stdout.splitlines()[3:] == expected_ouput[3:]
         else:
             assert json.loads(r.stdout) == [
                 {

@@ -59,7 +59,9 @@ def test_upgrade_v0(archive, layer, data_archive_readonly, cli_runner, tmp_path,
         assert r.exit_code == 0, r.stderr
 
         if layer == H.POINTS.LAYER:
-            assert r.stdout.splitlines() == POINTS_UPGRADE_RESULT
+            assert r.stdout.splitlines()[:2] == POINTS_UPGRADE_RESULT[:2]
+            assert r.stdout.splitlines()[3:8] == POINTS_UPGRADE_RESULT[3:8]
+            assert r.stdout.splitlines()[9:] == POINTS_UPGRADE_RESULT[9:]
 
 
 @pytest.mark.slow
@@ -95,7 +97,9 @@ def test_upgrade_v1(archive, layer, data_archive_readonly, cli_runner, tmp_path,
         assert r.exit_code == 0, r.stderr
 
         if layer == H.POINTS.LAYER:
-            assert r.stdout.splitlines() == POINTS_UPGRADE_RESULT
+            assert r.stdout.splitlines()[:2] == POINTS_UPGRADE_RESULT[:2]
+            assert r.stdout.splitlines()[3:8] == POINTS_UPGRADE_RESULT[3:8]
+            assert r.stdout.splitlines()[9:] == POINTS_UPGRADE_RESULT[9:]
 
         r = cli_runner.invoke(["status", "--output-format=json"])
         assert r.exit_code == 0, r
@@ -141,7 +145,9 @@ def test_upgrade_v2(
         assert r.exit_code == 0, r.stderr
 
         if layer == H.POINTS.LAYER:
-            assert r.stdout.splitlines() == POINTS_UPGRADE_RESULT
+            assert r.stdout.splitlines()[:2] == POINTS_UPGRADE_RESULT[:2]
+            assert r.stdout.splitlines()[3:8] == POINTS_UPGRADE_RESULT[3:8]
+            assert r.stdout.splitlines()[9:] == POINTS_UPGRADE_RESULT[9:]
 
         r = cli_runner.invoke(["status", "--output-format=json"])
         assert r.exit_code == 0, r
@@ -184,7 +190,9 @@ def test_upgrade_v2_in_place(archive, layer, data_archive, cli_runner, tmp_path,
         assert r.exit_code == 0, r.stderr
 
         if layer == H.POINTS.LAYER:
-            assert r.stdout.splitlines() == POINTS_UPGRADE_RESULT
+            assert r.stdout.splitlines()[:2] == POINTS_UPGRADE_RESULT[:2]
+            assert r.stdout.splitlines()[3:8] == POINTS_UPGRADE_RESULT[3:8]
+            assert r.stdout.splitlines()[9:] == POINTS_UPGRADE_RESULT[9:]
 
 
 def test_upgrade_preserves_refs(data_archive, cli_runner, tmp_path):
