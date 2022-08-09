@@ -58,7 +58,7 @@ def get_parsed_doc(ctx: click.Context, contents: str) -> "t.Type[Doc]":
         doc = TextPage(ctx, converted_contents)
     else:
         converted_contents = rst_to_man(contents)
-        doc = ManPage(ctx, contents)
+        doc = ManPage(ctx, converted_contents)
     return doc
 
 
