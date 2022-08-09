@@ -6,12 +6,13 @@ import platform
 import shlex
 import click
 import shutil
-import rst2txt
 from pathlib import Path
 
-from docutils.core import publish_string
-from docutils.writers import manpage
-from kart.docs import COMMANDS_FOLDER, ManPage, BaseDocWriter, TextPage
+
+COMMANDS_FOLDER = Path.home() / os.path.join(
+    "Documents", "gh", "kart", "docs", "pages", "commands"
+)
+
 
 L = logging.getLogger("kart.help")
 
@@ -22,12 +23,8 @@ class ExecutableNotFoundError(Exception):
 
 
 def kart_help(ctx: click.Context):
-    doc = Path(COMMANDS_FOLDER) / f'{ctx.command_path.replace(" ", "_")}.rst'
-    contents = ""
-    if doc.exists():
-        contents = doc.read_text()
     help_render = get_renderer()
-    help_render.render(ctx, contents)
+    help_render.render(ctx)
 
 
 def get_renderer():
@@ -67,14 +64,14 @@ class PagingHelpRenderer:
             pager = os.environ["PAGER"]
         return shlex.split(pager)
 
-    def render(self, ctx: click.Context, contents: str):
+    def render(self, ctx: click.Context):
         """Converts the reST doc content to man and sends it to a suitable pager
 
         Args:
             ctx (click.Context): _description_
             contents (_type_): _description_
         """
-        converted_content = self._convert_doc_content(ctx, contents)
+        converted_content = self._convert_doc_content(ctx)
         self._send_output_to_pager(converted_content)
 
     def _send_output_to_pager(self, output: str):
@@ -103,8 +100,10 @@ class PosixHelpRenderer(PagingHelpRenderer):
 
     PAGER = "less -R"
 
-    def _convert_doc_content(self, ctx, contents):
-        man_page = self._convert_doc_content_body(ctx, contents)
+    def _convert_doc_content(self, ctx):
+        from kart import prefix
+
+        man_page = Path(prefix) / f'{ctx.command_path.replace(" ", "_")}.1'
         if not shutil.which("groff"):
             raise ExecutableNotFoundError("groff")
         cmdline = ["groff", "-m", "man", "-T", "ascii"]
@@ -117,18 +116,6 @@ class PosixHelpRenderer(PagingHelpRenderer):
         )
         groff_output = p3.communicate(input=man_page)[0]
         return groff_output
-
-    def _convert_doc_content_body(self, ctx, contents):
-        # we add a header to the man page and remove it later
-        # to avoid parsing the rst2man "metadata" in ManPage
-        header = "KART\n====\n"
-        man_contents = publish_string(
-            header + contents, writer=manpage.Writer()
-        ).decode("utf-8")[718:]
-        doc = ManPage(ctx, man_contents)
-        writer = BaseDocWriter.get_doc_writer(doc)
-        man_page = writer.write()
-        return bytes(man_page, "utf-8")
 
     def _send_output_to_pager(self, output):
         cmdline = self.get_pager_cmdline()
@@ -146,13 +133,6 @@ class WindowsHelpRenderer(PagingHelpRenderer):
     """Render help content on a Windows platform."""
 
     PAGER = "more"
-
-    def _convert_doc_content(self, ctx, contents):
-        text_output = publish_string(contents, writer=rst2txt.Writer()).decode("utf-8")
-        doc = TextPage(ctx, text_output)
-        writer = BaseDocWriter.get_doc_writer(doc)
-        text_page = writer.write()
-        return bytes(text_page, "utf-8")
 
     def _popen(self, *args, **kwargs):
         # Also set the shell value to True.  To get any of the
