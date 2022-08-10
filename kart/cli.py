@@ -23,7 +23,6 @@ from .cli_util import (
     call_and_exit_flag,
     tool_environment,
     KartCommand,
-    kart_help,
 )
 from .context import Context
 from .exec import run_and_wait
@@ -135,7 +134,7 @@ def print_version(ctx):
     )
 
     # report on whether this was run through helper mode
-    helper_pid = os.environ.get('KART_HELPER_PID')
+    helper_pid = os.environ.get("KART_HELPER_PID")
     if helper_pid:
         click.echo(f"Executed via helper, PID: {helper_pid}")
 
@@ -184,7 +183,8 @@ class KartGroup(click.Group):
 
     def format_help(self, ctx, formatter):
         try:
-            return kart_help(ctx)
+            help_render = get_renderer()
+            help_render.render(ctx)
         except Exception as e:
             return super().format_help(ctx, formatter)
 
@@ -255,7 +255,6 @@ def push(ctx, do_progress, args):
             *args,
         ],
     )
-
 
 
 @cli.command(context_settings=dict(ignore_unknown_options=True))

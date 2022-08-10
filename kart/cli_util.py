@@ -13,7 +13,7 @@ import pygit2
 from click.core import Argument
 from click.shell_completion import CompletionItem
 
-from kart.help import kart_help
+from kart.help import get_renderer
 
 
 L = logging.getLogger("kart.cli_util")
@@ -22,11 +22,9 @@ L = logging.getLogger("kart.cli_util")
 class KartCommand(click.Command):
     def format_help(self, ctx, formatter):
         try:
-            return kart_help(ctx)
+            help_render = get_renderer()
+            help_render.render(ctx)
         except Exception as e:
-            import pdb
-
-            pdb.set_trace()
             L.debug(f"Failed rendering help page: {e}")
             return super().format_help(ctx, formatter)
 

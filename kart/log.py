@@ -24,7 +24,7 @@ from .output_util import dump_json_output
 from .repo import KartRepoState
 from .timestamps import datetime_to_iso8601_utc, timedelta_to_iso8601_tz
 from kart.completion_shared import path_completer
-from kart.help import kart_help
+from kart.help import get_renderer
 
 L = logging.getLogger("kart.log")
 
@@ -61,7 +61,8 @@ class PreserveDoubleDash(click.Command):
 
     def format_help(self, ctx, formatter):
         try:
-            kart_help(ctx)
+            help_render = get_renderer()
+            help_render.render(ctx)
         except Exception as e:
             L.debug(f"Failed rendering help page: {e}")
             return super().format_help(ctx, formatter)

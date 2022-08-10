@@ -12,11 +12,6 @@ from pathlib import Path
 L = logging.getLogger("kart.help")
 
 
-def kart_help(ctx: click.Context):
-    help_render = get_renderer()
-    help_render.render(ctx)
-
-
 def get_renderer():
     """
     Return the appropriate HelpRenderer implementation for the
@@ -93,7 +88,7 @@ class PosixHelpRenderer(PagingHelpRenderer):
     def _convert_doc_content(self, ctx):
         from kart import prefix
 
-        man_page = Path(prefix) / "help" / f'{ctx.command_path.replace(" ", "_")}.1'
+        man_page = Path(prefix) / "help" / f'{ctx.command_path.replace(" ", "-")}.1'
         if not shutil.which("groff"):
             raise click.ClickException("groff not found in PATH")
         cmdline = ["groff", "-m", "man", "-T", "ascii"]
