@@ -9,17 +9,7 @@ import shutil
 from pathlib import Path
 
 
-COMMANDS_FOLDER = Path.home() / os.path.join(
-    "Documents", "gh", "kart", "docs", "pages", "commands"
-)
-
-
 L = logging.getLogger("kart.help")
-
-
-class ExecutableNotFoundError(Exception):
-    def __init__(self, executable_name):
-        super(ExecutableNotFoundError, self).__init__()
 
 
 def kart_help(ctx: click.Context):
@@ -103,9 +93,9 @@ class PosixHelpRenderer(PagingHelpRenderer):
     def _convert_doc_content(self, ctx):
         from kart import prefix
 
-        man_page = Path(prefix) / f'{ctx.command_path.replace(" ", "_")}.1'
+        man_page = Path(prefix) / "help" / f'{ctx.command_path.replace(" ", "_")}.1'
         if not shutil.which("groff"):
-            raise ExecutableNotFoundError("groff")
+            raise click.ClickException("groff not found in PATH")
         cmdline = ["groff", "-m", "man", "-T", "ascii"]
         L.debug("Running command: %s", cmdline)
         p3 = self._popen(
@@ -114,7 +104,7 @@ class PosixHelpRenderer(PagingHelpRenderer):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
-        groff_output = p3.communicate(input=man_page)[0]
+        groff_output = p3.communicate(input=man_page.read_bytes())[0]
         return groff_output
 
     def _send_output_to_pager(self, output):
